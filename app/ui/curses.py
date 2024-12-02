@@ -71,3 +71,9 @@ class CursesRenderer(BaseRenderer):
         elif isinstance(obj, Cursor):
             y, x = window.getbegyx()
             self._screen.move(y + obj.y, x + obj.x)
+
+    def _clear(self, obj: Drawable):
+        y, x = curses.getsyx()
+        self._screen.move(obj.y, obj.x)
+        self._screen.clrtoeol()
+        self._screen.move(y, x)

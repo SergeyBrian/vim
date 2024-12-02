@@ -1,0 +1,109 @@
+@startuml
+
+top to bottom direction
+
+interface Drawable {
+  - geometry
+}
+
+class Text {
+}
+
+class Window {
+  - items: []Drawable
+}
+
+Text ..|> Drawable
+Window ..|> Drawable
+
+interface Renderer {
+  + init()
+  + shutdown()
+  + render()
+  + add()
+  + getch()
+  - drawable_items: []Drawable
+}
+
+class CursesRenderer {
+}
+
+abstract BaseView {
+  - renderer
+}
+
+Drawable --* Renderer
+Renderer --* BaseView
+
+interface Command {
+  + execute()
+}
+
+abstract EditorCommand {
+  - EditorController
+}
+
+abstract TextCommand {
+  - TextController
+}
+
+TextCommand --|> Command
+EditorCommand --|> Command
+
+class InsertCommand
+class FindCommand
+class QuitCommand
+
+QuitCommand ..|> EditorCommand
+InsertCommand ..|> TextCommand
+FindCommand ..|> TextCommand
+
+class EditorController {
+  - textController
+  - commandController
+}
+
+class CommandController {
+  + handleInput(input)
+  - commandView
+  - commandModel
+}
+
+CommandController --* EditorController
+
+class CommandFactory {
+  + buildCommand(name)
+  - textController
+  - editorController
+}
+
+CommandFactory -- Command
+CommandController -- CommandFactory
+
+TextModel --* TextController
+TextView --* TextController
+CommandModel --* CommandController
+CommandView --* CommandController
+
+TextController --* EditorController
+
+
+class TextModel {
+  text: str
+}
+
+class TextView
+
+class CommandView
+
+class CommandModel {
+  - curCommandText: str
+}
+
+TextView --|> BaseView
+CommandView --|> BaseView
+CursesRenderer ..|> Renderer
+
+
+
+@enduml

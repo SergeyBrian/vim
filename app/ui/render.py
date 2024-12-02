@@ -107,8 +107,15 @@ class BaseRenderer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def getch(self) -> Key:
+    def getch(self) -> Key | str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _clear(self, obj: Drawable):
         raise NotImplementedError
 
     def add(self, obj: Drawable):
+        # if obj in self._draw_calls:
+        #     self._clear(obj)
+        # else:
         self._draw_calls.append(obj)

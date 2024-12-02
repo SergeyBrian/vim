@@ -9,3 +9,6 @@ class Command(ABC):
     @abstractmethod
     def execute(self):
         raise NotImplementedError
+
+    def set_arg(self, val):
+        pass

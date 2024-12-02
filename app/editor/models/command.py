@@ -6,6 +6,7 @@ from app.editor.utils.keys import Key
 class Mode(Enum):
     NORMAL = 1
     INSERT = 2
+    COMMAND = 3
 
 
 class CommandModel:
@@ -59,3 +60,9 @@ class CommandModel:
         idx = self._cursor_pos
         self._input_buffer = self._input_buffer[:idx] + ch + self._input_buffer[idx:]
         self._cursor_pos += 1
+
+    def get_mode(self):
+        return self._mode
+
+    def set_mode(self, mode):
+        self._mode = mode
