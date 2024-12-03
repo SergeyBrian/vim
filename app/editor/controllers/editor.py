@@ -8,8 +8,7 @@ from app.ui.render import BaseRenderer
 
 
 class EditorController:
-    def __init__(self,
-                 renderer: BaseRenderer):
+    def __init__(self, renderer: BaseRenderer):
         text_model = TextModel()
         text_view = TextView(renderer, text_model)
         text_controller = TextController(text_model, text_view)
@@ -17,7 +16,9 @@ class EditorController:
         command_view = CommandView(renderer, command_model)
         self._text_view = text_view
         self._text_controller = text_controller
-        self._command_controller = CommandController(command_model, command_view, text_controller)
+        self._command_controller = CommandController(
+            command_model, command_view, text_controller
+        )
         self._command_controller.set_editor_controller(self)
         self._running = True
         self._renderer = renderer

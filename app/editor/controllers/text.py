@@ -13,8 +13,8 @@ class TextController:
     def delete_line(self):
         self._model.delete_line()
 
-    def new_line(self, wrap: bool):
-        self._model.new_line(wrap)
+    def new_line(self, wrap: bool, above: bool):
+        self._model.new_line(wrap, above)
 
     def cursor_forward(self, d: int):
         self._model.cursor_forward(d)

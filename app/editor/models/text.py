@@ -37,16 +37,17 @@ class TextModel:
             self._lines[self._cursor.row].length() - 1
         )
 
-    def new_line(self, wrap: bool):
+    def new_line(self, wrap: bool, above=False):
         cur_line = self._lines[self._cursor.row]
-        if not wrap or self._cursor.col == cur_line.length() - 1:
-            self._cursor.row += 1
+        offset = 0 if above else 1
+        if not wrap or self._cursor.col == cur_line.length():
+            self._cursor.row += offset
             self._lines.insert(self._cursor.row, MyString(""))
             self._cursor.col = 0
             return
         new_str = cur_line.substr(self._cursor.col)
         cur_line.erase(self._cursor.col, new_str.length())
-        self._cursor.row += 1
+        self._cursor.row += offset
         self._lines.insert(self._cursor.row, new_str)
         self._cursor.col = 0
 

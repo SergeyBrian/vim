@@ -40,7 +40,9 @@ class CmdTree:
 
     def get(self, key: Key | str):
         if isinstance(key, Key) and key is Key.KEY_ESC:
-            raise Exception("Escape key reached command factory. This should never happen!")
+            raise Exception(
+                "Escape key reached command factory. This should never happen!"
+            )
 
         node: CmdTree | None = self.children.get(key, None)
         if node is None:
@@ -52,9 +54,11 @@ class CmdTree:
 
 
 class CommandFactory:
-    def __init__(self,
-                 editor_controller: EditorControllerInterface,
-                 text_controller: TextController):
+    def __init__(
+        self,
+        editor_controller: EditorControllerInterface,
+        text_controller: TextController,
+    ):
         self._editor_controller = editor_controller
         self._text_controller = text_controller
 
@@ -69,14 +73,15 @@ class CommandFactory:
                         "q": CmdTree(
                             cmd=None,
                             expect=Expect.Any.value,
-                            children={"\n": CmdTree(
-                                QuitCommand(self._editor_controller),
-                                children=None,
-                                expect=Expect.Any.value
-                            ),
-                            }
+                            children={
+                                "\n": CmdTree(
+                                    QuitCommand(self._editor_controller),
+                                    children=None,
+                                    expect=Expect.Any.value,
+                                ),
+                            },
                         ),
-                    }
+                    },
                 ),
                 "d": CmdTree(
                     cmd=None,
@@ -90,32 +95,36 @@ class CommandFactory:
                         "d": CmdTree(
                             cmd=DeleteLineCommand(self._text_controller),
                             expect=Expect.Any.value,
-                            children=None
+                            children=None,
                         ),
-                    }
+                    },
                 ),
                 "l": CmdTree(
                     cmd=MoveCursorCommand(self._text_controller, 1),
                     expect=Expect.Empty.value,
-                    children=None
+                    children=None,
                 ),
                 "h": CmdTree(
                     cmd=MoveCursorCommand(self._text_controller, -1),
                     expect=Expect.Empty.value,
-                    children=None
+                    children=None,
                 ),
                 "o": CmdTree(
-                    cmd=NewLineCommand(self._text_controller, wrap=False),
+                    cmd=NewLineCommand(self._text_controller, wrap=False, above=False),
                     expect=Expect.Empty.value,
-                    children=None
+                    children=None,
+                ),
+                "O": CmdTree(
+                    cmd=NewLineCommand(self._text_controller, wrap=False, above=True),
+                    expect=Expect.Empty.value,
+                    children=None,
                 ),
             },
         )
 
-    def build_command(self,
-                      prev_cmd: CmdTree | None,
-                      cmd_buf: str,
-                      key: Key | str) -> tuple[CmdTree | Command | None, bool]:
+    def build_command(
+        self, prev_cmd: CmdTree | None, cmd_buf: str, key: Key | str
+    ) -> tuple[CmdTree | Command | None, bool]:
         if not key:
             return None, True
         if not prev_cmd:
@@ -134,5 +143,5 @@ class CommandFactory:
     def build_insert_command(self, key: str):
         return InsertCommand(self._text_controller, key)
 
-    def build_new_line_command(self, wrap: bool):
-        return NewLineCommand(self._text_controller, wrap)
+    def build_new_line_command(self, wrap: bool, above: bool = False):
+        return NewLineCommand(self._text_controller, wrap, above)

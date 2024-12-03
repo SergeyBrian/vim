@@ -12,3 +12,4 @@ class Command(ABC):
 
     def set_arg(self, val):
         pass
+
