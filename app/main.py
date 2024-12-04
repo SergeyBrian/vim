@@ -1,10 +1,10 @@
-from app.editor.controllers.editor import EditorController
+from app.editor.controller.controller import Controller
 from app.ui.curses import CursesRenderer
 
 
 def main():
     renderer = CursesRenderer()
-    editor = EditorController(renderer)
+    editor = Controller(renderer)
     editor.run()
 
 

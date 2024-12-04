@@ -47,7 +47,8 @@ class CursesRenderer(BaseRenderer):
         for obj in self._draw_calls:
             self._draw(obj)
         self._draw_calls.clear()
-        windows_to_delete = [key for key, win in self._windows.items() if win.delete]
+        windows_to_delete = [key for key,
+                             win in self._windows.items() if win.delete]
         for window in windows_to_delete:
             self._windows.pop(window)
 
@@ -58,10 +59,14 @@ class CursesRenderer(BaseRenderer):
         obj.resolve_geometry(*window.getmaxyx())
 
         if isinstance(obj, Text):
-            window.addstr(obj.y, obj.x, obj.text)
+            try:
+                window.addstr(obj.y, obj.x, obj.text)
+            except Exception as e:
+                window.addstr(0, 0, f"Error for {obj.__dict__}:{e}")
         elif isinstance(obj, Window):
             if obj not in self._windows:
-                self._windows[obj] = CursesWindow(window.subwin(obj.h, obj.w, obj.y, obj.x))
+                self._windows[obj] = CursesWindow(
+                    window.subwin(obj.h, obj.w, obj.y, obj.x))
 
             win = self._windows[obj]
             win.delete = False
@@ -77,3 +82,9 @@ class CursesRenderer(BaseRenderer):
         self._screen.move(obj.y, obj.x)
         self._screen.clrtoeol()
         self._screen.move(y, x)
+
+    def get_width(self) -> int:
+        return self._screen.getmaxyx()[1]
+
+    def get_height(self) -> int:
+        return self._screen.getmaxyx()[0]

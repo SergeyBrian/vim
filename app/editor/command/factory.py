@@ -1,4 +1,3 @@
-import cmd
 import dataclasses
 from enum import Enum
 
@@ -8,9 +7,9 @@ from app.editor.command.delete_line import DeleteLineCommand
 from app.editor.command.insert import InsertCommand
 from app.editor.command.new_line import NewLineCommand
 from app.editor.command.quit import QuitCommand
-from app.editor.controllers.editor_interface import EditorControllerInterface
-from app.editor.controllers.text import TextController
 from app.editor.utils.keys import Key
+from app.editor.model.interface import TextModel
+from app.editor.controller.interface import ControllerInterface
 
 
 class Expect(Enum):
@@ -54,13 +53,9 @@ class CmdTree:
 
 
 class CommandFactory:
-    def __init__(
-        self,
-        editor_controller: EditorControllerInterface,
-        text_controller: TextController,
-    ):
-        self._editor_controller = editor_controller
-        self._text_controller = text_controller
+    def __init__(self, controller: ControllerInterface, model: TextModel):
+        self._model = model
+        self._controller = controller
 
         self._commands: CmdTree = CmdTree(
             cmd=None,
@@ -75,7 +70,7 @@ class CommandFactory:
                             expect=Expect.Any.value,
                             children={
                                 "\n": CmdTree(
-                                    QuitCommand(self._editor_controller),
+                                    QuitCommand(self._controller, self._model),
                                     children=None,
                                     expect=Expect.Any.value,
                                 ),
@@ -88,34 +83,55 @@ class CommandFactory:
                     expect=Expect.Number.value | Expect.Empty.value,
                     children={
                         # "w": CmdTree(
-                        #     cmd=DeleteWordCommand(self._text_controller),
+                        #     cmd=DeleteWordCommand(self._controller),
                         #     expect=Expect.Any.value,
                         #     children=None
                         # ),
                         "d": CmdTree(
-                            cmd=DeleteLineCommand(self._text_controller),
+                            cmd=DeleteLineCommand(
+                                self._controller, self._model),
                             expect=Expect.Any.value,
                             children=None,
                         ),
                     },
                 ),
                 "l": CmdTree(
-                    cmd=MoveCursorCommand(self._text_controller, 1),
+                    cmd=MoveCursorCommand(
+                        self._controller, self._model, 1, vertical=False),
                     expect=Expect.Empty.value,
                     children=None,
                 ),
                 "h": CmdTree(
-                    cmd=MoveCursorCommand(self._text_controller, -1),
+                    cmd=MoveCursorCommand(
+                        self._controller, self._model, -1, vertical=False),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "k": CmdTree(
+                    cmd=MoveCursorCommand(
+                        self._controller, self._model, -1, vertical=True),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "j": CmdTree(
+                    cmd=MoveCursorCommand(
+                        self._controller, self._model, 1, vertical=True),
                     expect=Expect.Empty.value,
                     children=None,
                 ),
                 "o": CmdTree(
-                    cmd=NewLineCommand(self._text_controller, wrap=False, above=False),
+                    cmd=NewLineCommand(self._controller,
+                                       self._model,
+                                       wrap=False,
+                                       above=False),
                     expect=Expect.Empty.value,
                     children=None,
                 ),
                 "O": CmdTree(
-                    cmd=NewLineCommand(self._text_controller, wrap=False, above=True),
+                    cmd=NewLineCommand(self._controller,
+                                       self._model,
+                                       wrap=False,
+                                       above=True),
                     expect=Expect.Empty.value,
                     children=None,
                 ),
@@ -141,7 +157,7 @@ class CommandFactory:
         return new_cmd, True
 
     def build_insert_command(self, key: str):
-        return InsertCommand(self._text_controller, key)
+        return InsertCommand(self._controller, self._model, key)
 
     def build_new_line_command(self, wrap: bool, above: bool = False):
-        return NewLineCommand(self._text_controller, wrap, above)
+        return NewLineCommand(self._controller, self._model, wrap, above)

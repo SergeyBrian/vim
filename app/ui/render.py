@@ -24,7 +24,8 @@ class Drawable(ABC):
         self.w = w
         self.h = h
         self.alignment = alignment
-        self._hash = hash((type(self).__name__, self.x, self.y, self.w, self.h, self.alignment))
+        self._hash = hash((type(self).__name__, self.x,
+                          self.y, self.w, self.h, self.alignment))
 
     def __hash__(self):
         return self._hash
@@ -57,7 +58,7 @@ class Drawable(ABC):
         if self.alignment == Alignment.Bottom:
             self.y = height - self.h
         elif self.alignment == Alignment.Right:
-            self.x = width - self.w
+            self.x = width - self.w - 1
         elif self.alignment == Alignment.MiddleVertical:
             self.y = (height - self.h) // 2
         elif self.alignment == Alignment.MiddleHorizontal:
@@ -115,7 +116,12 @@ class BaseRenderer(ABC):
         raise NotImplementedError
 
     def add(self, obj: Drawable):
-        # if obj in self._draw_calls:
-        #     self._clear(obj)
-        # else:
         self._draw_calls.append(obj)
+
+    @abstractmethod
+    def get_height(self) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_width(self) -> int:
+        raise NotImplementedError
