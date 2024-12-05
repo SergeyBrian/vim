@@ -40,6 +40,7 @@ class CursesRenderer(BaseRenderer):
         return self.curses_ch_to_key(self._screen.getch())
 
     def render(self):
+        super().render()
         self._screen.clear()
         for window in self._windows.values():
             window.delete = True

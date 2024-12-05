@@ -5,11 +5,14 @@ from app.editor.command.command import Command, InvalidCommandException
 from app.editor.command.cursor import MoveCursorCommand
 from app.editor.command.delete_line import DeleteLineCommand
 from app.editor.command.insert import InsertCommand
+from app.editor.command.goto import GoToLineCommand, GoToIndexCommand
 from app.editor.command.new_line import NewLineCommand
 from app.editor.command.quit import QuitCommand
 from app.editor.utils.keys import Key
 from app.editor.model.interface import TextModel
 from app.editor.controller.interface import ControllerInterface
+
+from app.editor.view import debug as dbg_view
 
 
 class Expect(Enum):
@@ -45,11 +48,11 @@ class CmdTree:
 
         node: CmdTree | None = self.children.get(key, None)
         if node is None:
-            return self
+            return self, False
 
-        if node.children is None:
-            return node.cmd
-        return node
+        # if node.children is None:
+        #     return node.cmd, True
+        return node, True
 
 
 class CommandFactory:
@@ -76,6 +79,11 @@ class CommandFactory:
                                 ),
                             },
                         ),
+                        "\n": CmdTree(
+                            cmd=GoToLineCommand(self._controller, self._model),
+                            children=None,
+                            expect=Expect.Number.value,
+                        ),
                     },
                 ),
                 "d": CmdTree(
@@ -98,6 +106,16 @@ class CommandFactory:
                 "l": CmdTree(
                     cmd=MoveCursorCommand(
                         self._controller, self._model, 1, vertical=False),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "a": CmdTree(
+                    cmd=MoveCursorCommand(
+                        self._controller,
+                        self._model,
+                        1, vertical=False,
+                        insert=True
+                    ),
                     expect=Expect.Empty.value,
                     children=None,
                 ),
@@ -135,6 +153,54 @@ class CommandFactory:
                     expect=Expect.Empty.value,
                     children=None,
                 ),
+                "0": CmdTree(
+                    cmd=GoToIndexCommand(self._controller,
+                                         self._model, 0),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "^": CmdTree(
+                    cmd=GoToIndexCommand(self._controller,
+                                         self._model, 0),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "$": CmdTree(
+                    cmd=GoToIndexCommand(self._controller,
+                                         self._model, -1),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "A": CmdTree(
+                    cmd=GoToIndexCommand(self._controller,
+                                         self._model, -1, insert=True),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "I": CmdTree(
+                    cmd=GoToIndexCommand(self._controller,
+                                         self._model, 0, insert=True),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "g": CmdTree(
+                    cmd=None,
+                    expect=Expect.Empty.value,
+                    children={
+                        "g": CmdTree(
+                            cmd=GoToLineCommand(self._controller,
+                                                self._model, 0),
+                            expect=Expect.Empty.value,
+                            children=None,
+                        ),
+                    },
+                ),
+                "G": CmdTree(
+                    cmd=GoToLineCommand(self._controller,
+                                        self._model, -1),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
             },
         )
 
@@ -142,19 +208,23 @@ class CommandFactory:
         self, prev_cmd: CmdTree | None, cmd_buf: str, key: Key | str
     ) -> tuple[CmdTree | Command | None, bool]:
         if not key:
-            return None, True
+            return None, True, True
         if not prev_cmd:
             prev_cmd = self._commands
 
-        new_cmd = prev_cmd.get(key)
-        if new_cmd is None and not Expect.validate(prev_cmd.expect, cmd_buf):
-            raise InvalidCommandException
+        new_cmd, found = prev_cmd.get(key)
+        dbg_view.instance().set("next", new_cmd)
+        if not Expect.validate(new_cmd.expect, cmd_buf):
+            return prev_cmd, False, False
+        if new_cmd.cmd:
+            new_cmd = new_cmd.cmd
         if isinstance(new_cmd, Command) and cmd_buf:
-            new_cmd.set_arg(prev_cmd)
+            new_cmd.set_arg(cmd_buf)
+            dbg_view.instance().set("arg", cmd_buf)
         if isinstance(new_cmd, CmdTree) and new_cmd.cmd is None:
-            return new_cmd, False
+            return new_cmd, False, found
 
-        return new_cmd, True
+        return new_cmd, True, found
 
     def build_insert_command(self, key: str):
         return InsertCommand(self._controller, self._model, key)

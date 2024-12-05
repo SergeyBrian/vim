@@ -22,9 +22,9 @@ class BaseState(ABC):
     ):
         raise NotImplementedError
 
-    def pre_handle(self, command_controller: ControllerInterface, key: Key | str):
+    def pre_handle(self, controller: ControllerInterface, key: Key | str):
         if isinstance(key, Key) and key is Key.KEY_ESC:
-            command_controller.set_state(NormalState(self._cmd_factory))
+            controller.set_state(NormalState(self._cmd_factory))
             return False
         return True
 
@@ -50,19 +50,19 @@ class NormalState(BaseState):
         prev_cmd: CmdTree | None,
         cmd_buf: str,
         key: Key | str,
-    ) -> tuple[CmdTree | None, bool]:
+    ) -> tuple[CmdTree | None, bool, bool]:
         if not super().pre_handle(command_controller, key):
-            return None, True
+            return None, True, False
 
         if prev_cmd is None and not cmd_buf:
             if key == "i":
                 command_controller.set_state(InsertState(self._cmd_factory))
-                return None, True
+                return None, True, True
 
-        command, need_reset = self._cmd_factory.build_command(
+        command, need_reset, found = self._cmd_factory.build_command(
             prev_cmd, cmd_buf, key)
 
-        return super().post_handle(command, need_reset)
+        return *super().post_handle(command, need_reset), found
 
 
 class InsertState(BaseState):
@@ -78,10 +78,10 @@ class InsertState(BaseState):
         key: Key | str,
     ):
         if not super().pre_handle(command_controller, key):
-            return None, True
+            return None, True, True
         # TODO: fix this..
         if key == "\n":
             cmd = self._cmd_factory.build_new_line_command(wrap=True)
         else:
             cmd = self._cmd_factory.build_insert_command(key)
-        return super().post_handle(cmd, True)
+        return *super().post_handle(cmd, True), True

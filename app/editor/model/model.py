@@ -1,6 +1,7 @@
 from mystring import MyString
 from enum import Enum
 from app.editor.utils.keys import Key
+from app.editor.view import debug as dbg_view
 
 
 class CursorPos:
@@ -29,6 +30,7 @@ class Model:
         self._subscribers = []
 
     def _send_updates(self):
+        dbg_view.instance().set("cursor", self._cursor.__dict__)
         for fn in self._subscribers:
             fn()
 
@@ -73,7 +75,11 @@ class Model:
         return [line.c_str() for line in self._lines]
 
     def move_cursor_h(self, d: int):
-        if 0 <= self._cursor.col + d < self._lines[self._cursor.row].length():
+        cur_line_l = self._lines[self._cursor.row].length()
+        if (0 <= self._cursor.col + d and
+                (self._cursor.col + d < cur_line_l) or
+                (self._mode == Mode.INSERT and
+                 self._cursor.col + d == cur_line_l)):
             self._cursor.col += d
             self._prev_col = self._cursor.col
             self._send_updates()
@@ -87,6 +93,23 @@ class Model:
             )
             self._send_updates()
 
+    def set_cursor(self, row: int | None, col: int | None):
+        if row is not None:
+            if row < 0:
+                row = len(self._lines)
+            self._cursor.row = min(max(0, row), len(self._lines) - 1)
+            self._cursor.col = min(
+                self._lines[self._cursor.row].length(),
+                self._prev_col
+            )
+        if col is not None:
+            if col < 0 or col >= len(self._lines[self._cursor.row]):
+                col = len(self._lines[self._cursor.row])
+                if self._mode != Mode.INSERT:
+                    col -= 1
+            self._cursor.col = max(0, col)
+        self._send_updates()
+
     def move_cursor(self, offset: int):
         new_pos = self._cursor_pos + offset
         if new_pos < 0 or new_pos > len(self._input_buffer):
@@ -97,13 +120,14 @@ class Model:
     def get_cursor_pos(self):
         return self._cursor_pos
 
-    def get_text_cursor(self):
+    def get_cursor(self):
         return self._cursor
 
     def get_input_buffer(self):
         return self._input_buffer
 
     def set_input_buffer(self, value: str):
+        dbg_view.instance().set("cmd_buf", self._input_buffer)
         self._input_buffer = value
         self._cursor_pos = len(value)
         self._send_updates()
@@ -158,6 +182,8 @@ class Model:
 
     def set_mode(self, mode):
         self._mode = mode
+        if mode == Mode.NORMAL:
+            self.move_cursor_h(-1)
         self._send_updates()
 
     def register_subscriber(self, subscriber):

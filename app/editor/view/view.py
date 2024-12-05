@@ -8,7 +8,7 @@ class View:
 
         self._cmd_offset = 0
 
-        self._model: Model | None = None
+        self._model: Model
 
         self._cur_text_offset_v = 0
         self._cur_text_offset_h = 0
@@ -36,11 +36,11 @@ class View:
 
     @property
     def _cursor(self):
-        curs = self._model.get_text_cursor()
+        curs = self._model.get_cursor()
         return CursorPos(curs.col, curs.row - self._cur_text_offset_v)
 
     def _render(self):
-        items = list([
+        items: list[Drawable] = list([
             Text(0, y, f"{line}")
             for y, line in enumerate(self._visible_lines)
         ])
@@ -53,22 +53,25 @@ class View:
 
         if self._cur_mode == Mode.INSERT:
             items = [
-                Text(0, 0, "-- INSERT --"),
+                Text(0, 1, "-- INSERT --"),
             ]
         elif self._cur_mode == Mode.NORMAL:
+            alignment = Alignment.Left
+            if self._cmd_buf and self._cmd_buf[0] != ":":
+                alignment = Alignment.Right
             items = [
-                Text(0, 0, self._cmd_buf),
+                Text(0, 1, self._cmd_buf, alignment),
             ]
 
-            if self._cmd_buf != "":
-                items.append(Cursor(x=self._cmd_cursor_idx, y=0))
+            if self._cmd_buf != "" and self._cmd_buf[0] == ":":
+                items.append(Cursor(x=self._cmd_cursor_idx, y=1))
 
         curs_info = f"{self._cursor.row}:{self._cursor.col}"
         items.append(
             Text(0, 0, curs_info, alignment=Alignment.Right)
         )
         self._renderer.add(
-            Window(h=1, w=1.0, items=items, alignment=Alignment.Bottom)
+            Window(h=2, w=1.0, items=items, alignment=Alignment.Bottom)
         )
 
         self._renderer.render()
@@ -78,7 +81,7 @@ class View:
         return self._renderer.get_height() - 3
 
     def _on_update(self):
-        cursor = self._model.get_text_cursor()
+        cursor = self._model.get_cursor()
         while cursor.row - self._cur_text_offset_v > self._height:
             self._cur_text_offset_v += 1
         while cursor.row - self._cur_text_offset_v < 0:

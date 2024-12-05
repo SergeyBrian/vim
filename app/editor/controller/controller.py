@@ -5,12 +5,15 @@ from app.editor.utils.keys import Key
 from app.editor.command.command import InvalidCommandException
 from app.editor.command.factory import CmdTree, CommandFactory
 from app.editor.command.state import BaseState, NormalState, InsertState
+from app.editor.view import debug as dbg_view
 
 
 class Controller:
     def __init__(self, renderer: BaseRenderer):
         self._model = Model()
         self._view = View(renderer)
+
+        dbg_view.init(renderer)
 
         self._running = True
         self._renderer = renderer
@@ -19,18 +22,29 @@ class Controller:
         self.normal_mode = NormalState(cmd_factory)
         self.insert_mode = InsertState(cmd_factory)
         self._state: BaseState = self.normal_mode
+        self._arg_buf = ""
 
     def handle_key(self, key: Key | str):
         try:
-            next_cmd, need_reset = self._state.handle_key(
-                self, self._cur_cmd, self._model.get_input_buffer(), key
+            next_cmd, need_reset, found = self._state.handle_key(
+                self, self._cur_cmd, self._arg_buf, key
             )
             if not next_cmd:
                 self._reset_cmd()
+                self._arg_buf = ""
             else:
-                self._cur_cmd = next_cmd
+                dbg_view.instance().set("arg_buf", self._arg_buf)
+                # dbg_view.instance().set("next_cmd", next_cmd)
+                # dbg_view.instance().set("cur_cmd", self._cur_cmd)
                 if not need_reset:
+                    if not found:
+                        if isinstance(key, str):
+                            self._arg_buf += key
+                        elif key is Key.KEY_BACKSPACE:
+                            self._arg_buf = self._arg_buf[:1]
+                        dbg_view.instance().set("arg_buf", self._arg_buf)
                     self._model.push_input_buffer(key)
+                self._cur_cmd = next_cmd
 
         except InvalidCommandException:
             self._reset_cmd()
@@ -48,7 +62,7 @@ class Controller:
         try:
             self._renderer.init()
             self._view.observe(self._model)
-            ch = ""
+            ch: Key | str = ""
             while True:
                 self.handle_key(ch)
                 if not self._running:
