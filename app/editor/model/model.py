@@ -28,16 +28,183 @@ class Model:
         self._input_buffer = ""
         self._cursor_pos = 0
         self._subscribers = []
+        self._filename = ""
 
     def _send_updates(self):
         dbg_view.instance().set("cursor", self._cursor.__dict__)
         for fn in self._subscribers:
             fn()
 
+    def load_file(self, filename: str, lines: list[str]):
+        self._filename = filename
+        self._cursor.col = 0
+        self._cursor.row = 0
+        self._lines.clear()
+        for line in lines:
+            self._lines.append(MyString(line.strip()))
+        self._send_updates()
+
     def insert(self, key):
         self._lines[self._cursor.row].insert(self._cursor.col, key)
         self._cursor.col += 1
         self._prev_col = self._cursor.col
+        self._send_updates()
+
+    def _fix_cursor(self):
+        if self._cursor.row == 0 and self._cursor.col < 0:
+            self._cursor.row = 0
+            self._cursor.col = 0
+        if (self._cursor.row == len(self._lines) - 1 and
+                self._cursor.col >= self._lines[self._cursor.row].length()):
+            self._cursor.col = self._lines[self._cursor.row].length() - 1
+
+        if self._cursor.row < 0:
+            self._cursor.row = 0
+            self._cursor.col = 0
+        if self._cursor.row >= len(self._lines):
+            self._cursor.row = len(self._lines) - 1
+            self._cursor.col = self._lines[self._cursor.row].length() - 1
+
+        if self._cursor.col < 0:
+            self._cursor.row -= 1
+            self._cursor.col = self._lines[self._cursor.row].length() - 1
+        if self._cursor.col >= self._lines[self._cursor.row].length():
+            self._cursor.row += 1
+            self._cursor.col = 0
+
+    @staticmethod
+    def _is_delimiter(c):
+        return not c.isalnum()
+
+    def _map_words(self, row: int):
+        res = []
+        line = self._lines[row]
+        start = 0
+        for i in range(line.length()):
+            if self._is_delimiter(line[i]):
+                res.append((start, i - 1))
+                start = i + 1
+        res.append((start, line.length() - 1))
+        return res
+
+    def move_cursor_word(self, forward: bool):
+        dir = 1 if forward else -1
+        words = self._map_words(self._cursor.row)
+        dbg_view.instance().set("words", words)
+        cur_word = 0
+        for i, w in enumerate(words):
+            if w[0] <= self._cursor.col <= w[1]:
+                cur_word = i
+                break
+        dbg_view.instance().set("cur_word", cur_word)
+
+        if (not forward and
+                words[cur_word][0] < self._cursor.col):
+            new_word = cur_word
+        else:
+            new_word = cur_word + dir
+
+        if 0 <= new_word < len(words):
+            self.set_cursor(self._cursor.row, words[new_word][0])
+            return
+        else:
+            new_row = self._cursor.row + dir
+            if new_row < 0:
+                return
+            if new_row >= len(self._lines):
+                return
+            new_words = self._map_words(new_row)
+            if forward:
+                words = [*words, *new_words]
+            else:
+                new_word += len(new_words)
+                words = [*new_words, *words]
+
+            dbg_view.instance().set("words", words)
+            self.set_cursor(new_row, words[new_word][0])
+
+    def delete_next(self, forward: bool):
+        a = CursorPos(row=self._cursor.row, col=self._cursor.col)
+        self.move_cursor_word(forward)
+        b = CursorPos(row=self._cursor.row, col=self._cursor.col)
+        if a.row < b.row or (a.row == b.row and a.col < b.col):
+            start = a
+            end = b
+        else:
+            start = b
+            end = a
+        self._delete(start, end)
+
+    def _delete(self, start: CursorPos, end: CursorPos):
+        dbg_view.instance().set("del_start", start.__dict__)
+        dbg_view.instance().set("del_end", end.__dict__)
+        if start.row == end.row:
+            self._lines[start.row].erase(start.col, end.col - start.col)
+        else:
+            self._lines[start.row].erase(
+                start.col, self._lines[start.row].length() - start.col
+            )
+            for i in range(start.row, end.row):
+                self._lines[i] += self._lines[i + 1]
+                del self._lines[i + 1]
+            if end.row < len(self._lines):
+                self._lines[end.row].erase(0, end.col)
+        self.set_cursor(start.row, start.col)
+
+    def delete_word(self):
+        cur_line = self._lines[self._cursor.row]
+        if cur_line.empty():
+            return
+        if cur_line[self._cursor.col] == " ":
+            self.delete(1)
+            return
+        start = self._cursor.col
+        end = self._cursor.col
+
+        while start > 0 and cur_line[start].isalnum():
+            start -= 1
+        while end < cur_line.length() and cur_line[end].isalnum():
+            end += 1
+        self._delete(CursorPos(row=self._cursor.row, col=start),
+                     CursorPos(row=self._cursor.row, col=end))
+
+    def delete(self, dir):
+        a = CursorPos(
+            col=self._cursor.col,
+            row=self._cursor.row
+        )
+        b = CursorPos(
+            col=self._cursor.col,
+            row=self._cursor.row
+        )
+
+        dbg_view.instance().set("dir", dir)
+        a.col += dir
+
+        while a.col < 0:
+            a.row -= 1
+            if a.row < 0:
+                a.row = 0
+                a.col = 0
+                break
+            a.col += self._lines[a.row].length() + 1
+
+        while a.col > self._lines[a.row].length():
+            a.row += 1
+            if a.row > len(self._lines):
+                a.row = len(self._lines) - 1
+                a.col = self._lines[a.row].length() - 1
+                break
+            a.col -= self._lines[a.row].length() - 1
+
+        if a.row < b.row or (a.row == b.row and a.col < b.col):
+            start = a
+            end = b
+        else:
+            start = b
+            end = a
+
+        self._delete(start, end)
         self._send_updates()
 
     def delete_line(self):

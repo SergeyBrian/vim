@@ -58,6 +58,14 @@ class NormalState(BaseState):
             if key == "i":
                 command_controller.set_state(InsertState(self._cmd_factory))
                 return None, True, True
+            elif key == Key.KEY_BACKSPACE or key == Key.KEY_LEFT:
+                key = "h"
+            elif key == "\n" or key == Key.KEY_DOWN:
+                key = "j"
+            elif key == Key.KEY_RIGHT:
+                key = "l"
+            elif key == Key.KEY_UP:
+                key = "k"
 
         command, need_reset, found = self._cmd_factory.build_command(
             prev_cmd, cmd_buf, key)
@@ -82,6 +90,8 @@ class InsertState(BaseState):
         # TODO: fix this..
         if key == "\n":
             cmd = self._cmd_factory.build_new_line_command(wrap=True)
+        elif key == Key.KEY_BACKSPACE:
+            cmd = self._cmd_factory.build_delete_command(-1)
         else:
             cmd = self._cmd_factory.build_insert_command(key)
         return *super().post_handle(cmd, True), True

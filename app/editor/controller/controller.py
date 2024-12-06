@@ -53,15 +53,30 @@ class Controller:
         self._model.set_input_buffer("")
         self._cur_cmd = None
 
+    def open_file(self, filename: str):
+        with open(filename, "r") as file:
+            self.set_state(self.normal_mode)
+            lines = file.readlines()
+            self._model.load_file(filename, lines)
+
+    def save_file(self, filename: str):
+        if not filename:
+            filename = self._model._filename
+        with open(filename, "w") as file:
+            for line in self._model.get_lines():
+                file.write(f"{line}\n")
+
     def set_state(self, state: BaseState):
         self._state = state
         self._reset_cmd()
         self._model.set_mode(state.mode)
 
-    def run(self):
+    def run(self, init_file: str = ""):
         try:
             self._renderer.init()
             self._view.observe(self._model)
+            if init_file:
+                self.open_file(init_file)
             ch: Key | str = ""
             while True:
                 self.handle_key(ch)

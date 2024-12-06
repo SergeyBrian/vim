@@ -70,6 +70,10 @@ class View:
         items.append(
             Text(0, 0, curs_info, alignment=Alignment.Right)
         )
+        if self._model._filename:
+            items.append(
+                Text(0, 0, self._model._filename)
+            )
         self._renderer.add(
             Window(h=2, w=1.0, items=items, alignment=Alignment.Bottom)
         )
