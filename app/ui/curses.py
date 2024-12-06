@@ -24,6 +24,19 @@ class CursesRenderer(BaseRenderer):
         curses.curs_set(True)
         self._screen.keypad(True)
 
+    def need_init(self):
+        return not self._screen
+
+    def split_v(self):
+        r = CursesRenderer()
+        r._screen = self._screen.subwin(
+            self.get_height() // 2,
+            self.get_width(),
+            0,
+            0
+        )
+        return r
+
     def shutdown(self):
         curses.nocbreak()
         curses.echo()

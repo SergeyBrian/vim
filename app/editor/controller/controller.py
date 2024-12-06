@@ -23,6 +23,7 @@ class Controller:
         self.insert_mode = InsertState(cmd_factory)
         self._state: BaseState = self.normal_mode
         self._arg_buf = ""
+        self._allow_insert = True
 
     def handle_key(self, key: Key | str):
         try:
@@ -67,13 +68,18 @@ class Controller:
                 file.write(f"{line}\n")
 
     def set_state(self, state: BaseState):
+        if not self._allow_insert:
+            state = self.normal_mode
         self._state = state
         self._reset_cmd()
         self._model.set_mode(state.mode)
 
-    def run(self, init_file: str = ""):
+    def run(self, init_file: str = "", allow_insert: bool = True):
+        self._allow_insert = allow_insert
         try:
-            self._renderer.init()
+            need_init = self._renderer.need_init()
+            if need_init:
+                self._renderer.init()
             self._view.observe(self._model)
             if init_file:
                 self.open_file(init_file)
@@ -86,7 +92,13 @@ class Controller:
         except KeyboardInterrupt:
             pass
         finally:
-            self._renderer.shutdown()
+            if need_init:
+                self._renderer.shutdown()
+
+    def help(self):
+        r = self._renderer.split_v()
+        help_c = Controller(r)
+        help_c.run(init_file="help.txt", allow_insert=False)
 
     def quit(self):
         self._running = False

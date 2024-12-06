@@ -92,6 +92,18 @@ class InsertState(BaseState):
             cmd = self._cmd_factory.build_new_line_command(wrap=True)
         elif key == Key.KEY_BACKSPACE:
             cmd = self._cmd_factory.build_delete_command(-1)
+        elif key in [Key.KEY_DOWN, Key.KEY_UP, Key.KEY_LEFT, Key.KEY_RIGHT]:
+            if key == Key.KEY_LEFT:
+                key = "h"
+            elif key == Key.KEY_DOWN:
+                key = "j"
+            elif key == Key.KEY_RIGHT:
+                key = "l"
+            elif key == Key.KEY_UP:
+                key = "k"
+            cmd, _, _ = self._cmd_factory.build_command(
+                None, "", key)
+
         else:
             cmd = self._cmd_factory.build_insert_command(key)
         return *super().post_handle(cmd, True), True

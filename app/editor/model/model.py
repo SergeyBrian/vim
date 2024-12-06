@@ -29,6 +29,8 @@ class Model:
         self._cursor_pos = 0
         self._subscribers = []
         self._filename = ""
+        self._copy_buf: MyString = MyString("")
+        self._copy_line = False
 
     def _send_updates(self):
         dbg_view.instance().set("cursor", self._cursor.__dict__)
@@ -43,6 +45,15 @@ class Model:
         for line in lines:
             self._lines.append(MyString(line.strip()))
         self._send_updates()
+
+    def copy_line(self, line: bool):
+        self._copy_line = line
+        self._copy_buf = MyString(self._lines[self._cursor.row])
+
+    def paste(self):
+        if self._copy_line and self._copy_buf:
+            self._lines.insert(self._cursor.row + 1, self._copy_buf)
+            self._cursor.row += 1
 
     def insert(self, key):
         self._lines[self._cursor.row].insert(self._cursor.col, key)

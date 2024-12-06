@@ -106,6 +106,14 @@ class BaseRenderer(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def need_init(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def split_v(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def shutdown(self):
         raise NotImplementedError
 

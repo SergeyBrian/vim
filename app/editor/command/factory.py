@@ -11,8 +11,10 @@ from app.editor.command.goto import GoToLineCommand, GoToIndexCommand
 from app.editor.command.new_line import NewLineCommand
 from app.editor.command.file import (OpenFileCommand, SaveFileCommand,
                                      WriteQuitCommand)
+from app.editor.command.help import HelpCommand
 from app.editor.command.delete import DeleteCommand, DeleteWordCommand, DeleteNextCommand
 from app.editor.command.quit import QuitCommand
+from app.editor.command.copy import CopyLineCommand, PasteCommand
 from app.editor.utils.keys import Key
 from app.editor.model.interface import TextModel
 from app.editor.controller.interface import ControllerInterface
@@ -84,6 +86,17 @@ class CommandFactory:
                                     QuitCommand(self._controller, self._model),
                                     children=None,
                                     expect=Expect.Any.value,
+                                ),
+                            },
+                        ),
+                        "h": CmdTree(
+                            cmd=None,
+                            expect=Expect.Empty.value,
+                            children={
+                                "\n": CmdTree(
+                                    HelpCommand(self._controller, self._model),
+                                    children=None,
+                                    expect=Expect.Empty.value,
                                 ),
                             },
                         ),
@@ -273,6 +286,24 @@ class CommandFactory:
                 "b": CmdTree(
                     cmd=MoveCursorWordCommand(self._controller,
                                               self._model, forward=False),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "y": CmdTree(
+                    cmd=None,
+                    expect=Expect.Empty.value,
+                    children={
+                        "y": CmdTree(
+                            cmd=CopyLineCommand(self._controller,
+                                                self._model, line=True),
+                            expect=Expect.Empty.value,
+                            children=None,
+                        ),
+                    },
+                ),
+                "p": CmdTree(
+                    cmd=PasteCommand(self._controller,
+                                     self._model),
                     expect=Expect.Empty.value,
                     children=None,
                 ),
