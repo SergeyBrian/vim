@@ -31,11 +31,49 @@ class Model:
         self._filename = ""
         self._copy_buf: MyString = MyString("")
         self._copy_line = False
+        self._last_search = ""
+        self._last_search_reversed = False
 
     def _send_updates(self):
         dbg_view.instance().set("cursor", self._cursor.__dict__)
         for fn in self._subscribers:
             fn()
+
+    def _search(self, reverse: bool):
+        dir = -1 if self._last_search_reversed else 1
+        if reverse:
+            dir *= -1
+
+        q = self._last_search
+        i = self._cursor.row
+        s = self._cursor.col
+        while 0 <= i < len(self._lines):
+            if self._lines[i].empty():
+                i += dir
+                continue
+
+            res = self._lines[i].find(q, s)
+            dbg_view.instance().set(f"{i}", res)
+            if (res >= self._lines[i].length() or
+                    reverse and res <= s):
+                dbg_view.instance().set("f", res)
+                s = self._lines[i+dir].length() if reverse else 0
+            else:
+                self._cursor.row = i
+                dbg_view.instance().set("res", res)
+                self._cursor.col = res
+                break
+            i += dir
+
+    def search(self, reverse: bool, q: str):
+        self._last_search = q
+        self._last_search_reversed = reverse
+        self._search(reverse=False)
+        self._send_updates()
+
+    def repeat_search(self, reverse: bool):
+        self.move_cursor_h(-1 if reverse else 1)
+        self._search(reverse=reverse)
 
     def load_file(self, filename: str, lines: list[str]):
         self._filename = filename
@@ -43,7 +81,7 @@ class Model:
         self._cursor.row = 0
         self._lines.clear()
         for line in lines:
-            self._lines.append(MyString(line.strip()))
+            self._lines.append(MyString(line.strip("\n")))
         self._send_updates()
 
     def copy_line(self, line: bool):
@@ -219,6 +257,9 @@ class Model:
         self._send_updates()
 
     def delete_line(self):
+        self._copy_line = True
+        self._copy_buf = MyString(self._lines[self._cursor.row])
+
         if len(self._lines) == 1:
             self._lines[0] = MyString("")
             self._cursor.row = 0
@@ -229,9 +270,10 @@ class Model:
         self._cursor.row -= 1
         if self._cursor.row < 0:
             self._cursor.row = 0
-        self._cursor.col = min(
-            self._cursor.col, self._lines[self._cursor.row].length() - 1
-        )
+        self._cursor.col = 0
+        # min(
+        #     self._cursor.col, self._lines[self._cursor.row].length() - 1
+        # )
         self._send_updates()
 
     def new_line(self, wrap: bool, above=False):

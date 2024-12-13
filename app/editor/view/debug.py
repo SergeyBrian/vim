@@ -12,6 +12,7 @@ class DebugView:
         self._dbg_items[name] = item
 
     def _render(self):
+        return
         self._renderer.add(
             Window(h=1., w=0.5, items=[
                 Text(0, 0, "Debug info:"),

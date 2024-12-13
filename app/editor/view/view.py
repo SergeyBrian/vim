@@ -1,5 +1,7 @@
 from app.ui.render import BaseRenderer, Text, Window, Cursor, Alignment, Drawable
 from app.editor.model.model import Model, Mode, CursorPos
+from app.editor.utils.consts import CMD_SYMBOLS
+from app.editor.view import debug as dbg_view
 
 
 class View:
@@ -32,7 +34,10 @@ class View:
     @property
     def _visible_lines(self):
         lines = self._model.get_lines()
-        return lines[self._cur_text_offset_v:self._renderer.get_height() - 3]
+        # return lines[self._cur_text_offset_v:self._renderer.get_height() - 3]
+        offset = self._cur_text_offset_v
+        limit = self._renderer.get_height() - 2
+        return lines[offset:(limit + offset if limit is not None else None)]
 
     @property
     def _cursor(self):
@@ -57,16 +62,17 @@ class View:
             ]
         elif self._cur_mode == Mode.NORMAL:
             alignment = Alignment.Left
-            if self._cmd_buf and self._cmd_buf[0] != ":":
+            if (self._cmd_buf and self._cmd_buf[0] not in CMD_SYMBOLS):
                 alignment = Alignment.Right
             items = [
                 Text(0, 1, self._cmd_buf, alignment),
             ]
 
-            if self._cmd_buf != "" and self._cmd_buf[0] == ":":
+            if self._cmd_buf != "" and self._cmd_buf[0] in CMD_SYMBOLS:
                 items.append(Cursor(x=self._cmd_cursor_idx, y=1))
 
-        curs_info = f"{self._cursor.row}:{self._cursor.col}"
+        curs_info = f"{self._model.get_cursor().row + 1}:{
+            self._model.get_cursor().col + 1}"
         items.append(
             Text(0, 0, curs_info, alignment=Alignment.Right)
         )
@@ -90,5 +96,6 @@ class View:
             self._cur_text_offset_v += 1
         while cursor.row - self._cur_text_offset_v < 0:
             self._cur_text_offset_v -= 1
+        dbg_view.instance().set("offset", self._cur_text_offset_v)
 
         self._render()

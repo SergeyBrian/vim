@@ -15,6 +15,7 @@ from app.editor.command.help import HelpCommand
 from app.editor.command.delete import DeleteCommand, DeleteWordCommand, DeleteNextCommand
 from app.editor.command.quit import QuitCommand
 from app.editor.command.copy import CopyLineCommand, PasteCommand
+from app.editor.command.search import SearchCommand, RepeatSearchCommand
 from app.editor.utils.keys import Key
 from app.editor.model.interface import TextModel
 from app.editor.controller.interface import ControllerInterface
@@ -74,6 +75,30 @@ class CommandFactory:
             cmd=None,
             expect=Expect.Number.value | Expect.Empty.value,
             children={
+                "/": CmdTree(
+                    cmd=None,
+                    expect=Expect.Empty.value,
+                    children={
+                        "\n": CmdTree(
+                            SearchCommand(self._controller,
+                                          self._model, reversed=False),
+                            children=None,
+                            expect=Expect.String.value,
+                        ),
+                    },
+                ),
+                "?": CmdTree(
+                    cmd=None,
+                    expect=Expect.Empty.value,
+                    children={
+                        "\n": CmdTree(
+                            SearchCommand(self._controller,
+                                          self._model, reversed=True),
+                            children=None,
+                            expect=Expect.String.value,
+                        ),
+                    },
+                ),
                 ":": CmdTree(
                     cmd=None,
                     expect=Expect.Any.value,
@@ -304,6 +329,18 @@ class CommandFactory:
                 "p": CmdTree(
                     cmd=PasteCommand(self._controller,
                                      self._model),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "n": CmdTree(
+                    cmd=RepeatSearchCommand(self._controller,
+                                            self._model, reversed=False),
+                    expect=Expect.Empty.value,
+                    children=None,
+                ),
+                "N": CmdTree(
+                    cmd=RepeatSearchCommand(self._controller,
+                                            self._model, reversed=True),
                     expect=Expect.Empty.value,
                     children=None,
                 ),
