@@ -1,6 +1,6 @@
 from app.editor.command.command import Command
 from app.editor.command.quit import QuitCommand
-from app.editor.view import debug as dbg_view
+# from app.editor.view import debug as dbg_view
 
 
 class OpenFileCommand(Command):
@@ -15,7 +15,8 @@ class OpenFileCommand(Command):
         try:
             self._controller.open_file(self._filename)
         except Exception as e:
-            dbg_view.instance().set("file_err", e)
+            pass
+            # dbg_view.instance().set("file_err", e)
 
 
 class SaveFileCommand(Command):
@@ -30,7 +31,8 @@ class SaveFileCommand(Command):
         try:
             self._controller.save_file(self._filename)
         except Exception as e:
-            dbg_view.instance().set("file_err", e)
+            pass
+            # dbg_view.instance().set("file_err", e)
 
 
 class WriteQuitCommand(SaveFileCommand, QuitCommand):

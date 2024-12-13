@@ -97,6 +97,6 @@ class View:
             self._cur_text_offset_v += 1
         while cursor.row - self._cur_text_offset_v < 0:
             self._cur_text_offset_v -= 1
-        dbg_view.instance().set("offset", self._cur_text_offset_v)
+        # dbg_view.instance().set("offset", self._cur_text_offset_v)
 
         self._render()

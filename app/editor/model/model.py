@@ -36,7 +36,7 @@ class Model(Observable):
         self._last_search_reversed = False
 
     def _send_updates(self):
-        dbg_view.instance().set("cursor", self._cursor.__dict__)
+        # dbg_view.instance().set("cursor", self._cursor.__dict__)
         for fn in self._subscribers:
             fn()
 
@@ -54,14 +54,14 @@ class Model(Observable):
                 continue
 
             res = self._lines[i].find(q, s)
-            dbg_view.instance().set(f"{i}", res)
+            # dbg_view.instance().set(f"{i}", res)
             if (res >= self._lines[i].length() or
                     reverse and res <= s):
-                dbg_view.instance().set("f", res)
+                # dbg_view.instance().set("f", res)
                 s = self._lines[i+dir].length() if reverse else 0
             else:
                 self._cursor.row = i
-                dbg_view.instance().set("res", res)
+                # dbg_view.instance().set("res", res)
                 self._cursor.col = res
                 break
             i += dir
@@ -140,13 +140,13 @@ class Model(Observable):
     def move_cursor_word(self, forward: bool):
         dir = 1 if forward else -1
         words = self._map_words(self._cursor.row)
-        dbg_view.instance().set("words", words)
+        # dbg_view.instance().set("words", words)
         cur_word = 0
         for i, w in enumerate(words):
             if w[0] <= self._cursor.col <= w[1]:
                 cur_word = i
                 break
-        dbg_view.instance().set("cur_word", cur_word)
+        # dbg_view.instance().set("cur_word", cur_word)
 
         if (not forward and
                 words[cur_word][0] < self._cursor.col):
@@ -170,7 +170,7 @@ class Model(Observable):
                 new_word += len(new_words)
                 words = [*new_words, *words]
 
-            dbg_view.instance().set("words", words)
+            # dbg_view.instance().set("words", words)
             self.set_cursor(new_row, words[new_word][0])
 
     def delete_next(self, forward: bool):
@@ -186,8 +186,8 @@ class Model(Observable):
         self._delete(start, end)
 
     def _delete(self, start: CursorPos, end: CursorPos):
-        dbg_view.instance().set("del_start", start.__dict__)
-        dbg_view.instance().set("del_end", end.__dict__)
+        # dbg_view.instance().set("del_start", start.__dict__)
+        # dbg_view.instance().set("del_end", end.__dict__)
         if start.row == end.row:
             self._lines[start.row].erase(start.col, end.col - start.col)
         else:
@@ -228,7 +228,7 @@ class Model(Observable):
             row=self._cursor.row
         )
 
-        dbg_view.instance().set("dir", dir)
+        # dbg_view.instance().set("dir", dir)
         a.col += dir
 
         while a.col < 0:
@@ -349,7 +349,7 @@ class Model(Observable):
         return self._input_buffer
 
     def set_input_buffer(self, value: str):
-        dbg_view.instance().set("cmd_buf", self._input_buffer)
+        # dbg_view.instance().set("cmd_buf", self._input_buffer)
         self._input_buffer = value
         self._cursor_pos = len(value)
         self._send_updates()

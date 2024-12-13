@@ -34,7 +34,7 @@ class Controller:
                 self._reset_cmd()
                 self._arg_buf = ""
             else:
-                dbg_view.instance().set("arg_buf", self._arg_buf)
+                # dbg_view.instance().set("arg_buf", self._arg_buf)
                 # dbg_view.instance().set("next_cmd", next_cmd)
                 # dbg_view.instance().set("cur_cmd", self._cur_cmd)
                 if not need_reset:
@@ -43,7 +43,7 @@ class Controller:
                             self._arg_buf += key
                         elif key is Key.KEY_BACKSPACE:
                             self._arg_buf = self._arg_buf[:-1]
-                        dbg_view.instance().set("arg_buf", self._arg_buf)
+                        # dbg_view.instance().set("arg_buf", self._arg_buf)
                     self._model.push_input_buffer(key)
                 self._cur_cmd = next_cmd
 

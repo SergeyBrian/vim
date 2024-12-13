@@ -363,7 +363,7 @@ class CommandFactory:
             new_cmd = copy.copy(new_cmd.cmd)
         if isinstance(new_cmd, Command) and cmd_buf:
             new_cmd.set_arg(cmd_buf)
-            dbg_view.instance().set("arg", cmd_buf)
+            # dbg_view.instance().set("arg", cmd_buf)
         if isinstance(new_cmd, CmdTree) and new_cmd.cmd is None:
             return new_cmd, False, found
 

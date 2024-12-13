@@ -11,7 +11,7 @@ class GoToLineCommand(Command):
                  line: int = 0):
         super().__init__(controller, model)
         self._line = line
-        dbg_view.instance().set("goto", self._line)
+        # dbg_view.instance().set("goto", self._line)
 
     def set_arg(self, val):
         self._line = int(val) - 1
