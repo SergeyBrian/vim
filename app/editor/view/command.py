@@ -1,10 +1,10 @@
 from app.editor.models.command import CommandModel, Mode
 from app.editor.view.base import BaseView
-from app.ui.render import BaseRenderer, Text, Window, Alignment, Cursor
+from app.ui.render import IAdapterRenderer, Text, Window, Alignment, Cursor
 
 
 class CommandView(BaseView):
-    def __init__(self, renderer: BaseRenderer, model: CommandModel):
+    def __init__(self, renderer: IAdapterRenderer, model: CommandModel):
         super().__init__(renderer)
         self._model = model
 

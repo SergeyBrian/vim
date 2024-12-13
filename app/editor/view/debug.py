@@ -1,10 +1,10 @@
 from typing import Any
 
-from app.ui.render import BaseRenderer, Text, Window, Drawable, Alignment
+from app.ui.render import IAdapterRenderer, Text, Window, Drawable, Alignment
 
 
 class DebugView:
-    def __init__(self, renderer: BaseRenderer):
+    def __init__(self, renderer: IAdapterRenderer):
         self._renderer = renderer
         self._dbg_items: dict[str, Any] = {}
 
@@ -28,7 +28,7 @@ class DebugView:
 _dbg_view: DebugView
 
 
-def init(renderer: BaseRenderer):
+def init(renderer: IAdapterRenderer):
     global _dbg_view
     _dbg_view = DebugView(renderer)
     renderer.add_pre_callback(_dbg_view._render)

@@ -1,8 +1,8 @@
 from app.editor.utils.keys import Key
-from app.ui.render import BaseRenderer, Drawable
+from app.ui.render import IAdapterRenderer, Drawable
 
 
-class TestRenderer(BaseRenderer):
+class TestRenderer(IAdapterRenderer):
     def _clear(self, obj: Drawable):
         pass
 

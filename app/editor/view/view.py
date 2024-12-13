@@ -1,11 +1,12 @@
-from app.ui.render import BaseRenderer, Text, Window, Cursor, Alignment, Drawable
+from app.ui.render import IAdapterRenderer, Text, Window, Cursor, Alignment, Drawable
 from app.editor.model.model import Model, Mode, CursorPos
+from app.editor.model.observable import Observable
 from app.editor.utils.consts import CMD_SYMBOLS
 from app.editor.view import debug as dbg_view
 
 
 class View:
-    def __init__(self, renderer: BaseRenderer):
+    def __init__(self, renderer: IAdapterRenderer):
         self._renderer = renderer
 
         self._cmd_offset = 0
@@ -15,7 +16,7 @@ class View:
         self._cur_text_offset_v = 0
         self._cur_text_offset_h = 0
 
-    def observe(self, model: Model):
+    def observe(self, model: Observable):
         model.register_subscriber(self._on_update)
         self._model = model
 
@@ -37,7 +38,7 @@ class View:
         # return lines[self._cur_text_offset_v:self._renderer.get_height() - 3]
         offset = self._cur_text_offset_v
         limit = self._renderer.get_height() - 2
-        return lines[offset:(limit + offset if limit is not None else None)]
+        return map(lambda x: x.c_str(), lines[offset:(limit + offset if limit is not None else None)])
 
     @property
     def _cursor(self):

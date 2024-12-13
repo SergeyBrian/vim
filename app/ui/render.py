@@ -25,18 +25,18 @@ class Drawable(ABC):
         self.w = w
         self.h = h
         self.alignment = alignment
-        self._hash = hash((type(self).__name__, self.x,
-                          self.y, self.w, self.h, self.alignment))
-        self._priority = 0
+        # self._hash = hash((type(self).__name__, self.x,
+        #                   self.y, self.w, self.h, self.alignment))
+        # self._priority = 0
 
-    def __hash__(self):
-        return self._hash
-
-    def __eq__(self, other):
-        return self._hash == other.__hash__()
-
-    def _set_priority(self, p):
-        self._priority = p
+    # def __hash__(self):
+    #     return self._hash
+    #
+    # def __eq__(self, other):
+    #     return self._hash == other.__hash__()
+    #
+    # def _set_priority(self, p):
+    #     self._priority = p
 
     def resolve_geometry(self, height: int, width: int):
         if isinstance(self.x, float):
@@ -96,7 +96,7 @@ class Cursor(Drawable):
     pass
 
 
-class BaseRenderer(ABC):
+class IAdapterRenderer(ABC):
     def __init__(self):
         self._draw_calls: list[Drawable] = []
         self._pre_callbacks = []
@@ -130,9 +130,9 @@ class BaseRenderer(ABC):
         raise NotImplementedError
 
     def add(self, obj: Drawable, priority: int = 0):
-        obj._set_priority(priority)
+        # obj._set_priority(priority)
         self._draw_calls.append(obj)
-        self._draw_calls.sort(key=lambda x: x._priority)
+        # self._draw_calls.sort(key=lambda x: x._priority)
 
     def add_pre_callback(self, fn):
         self._pre_callbacks.append(fn)

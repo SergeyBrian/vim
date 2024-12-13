@@ -1,4 +1,4 @@
-from app.ui.render import BaseRenderer
+from app.ui.adapter import Adapter
 from app.editor.model.model import Model
 from app.editor.view.view import View
 from app.editor.utils.keys import Key
@@ -9,7 +9,7 @@ from app.editor.view import debug as dbg_view
 
 
 class Controller:
-    def __init__(self, renderer: BaseRenderer):
+    def __init__(self, renderer: Adapter):
         self._model = Model()
         self._view = View(renderer)
 
@@ -42,7 +42,7 @@ class Controller:
                         if isinstance(key, str):
                             self._arg_buf += key
                         elif key is Key.KEY_BACKSPACE:
-                            self._arg_buf = self._arg_buf[:1]
+                            self._arg_buf = self._arg_buf[:-1]
                         dbg_view.instance().set("arg_buf", self._arg_buf)
                     self._model.push_input_buffer(key)
                 self._cur_cmd = next_cmd
@@ -65,7 +65,7 @@ class Controller:
             filename = self._model._filename
         with open(filename, "w") as file:
             for line in self._model.get_lines():
-                file.write(f"{line}\n")
+                file.write(f"{line.c_str()}\n")
 
     def set_state(self, state: BaseState):
         if not self._allow_insert:

@@ -12,8 +12,6 @@ b          - Move the cursor to the beginning of the previous word to the left.
 gg         - Move the cursor to the beginning of the file.
 G          - Move the cursor to the end of the file.
 NG         - Move to line number N. Example: 10G move to the 10th line.
-PG_UP      - Scroll the screen up.
-PG_DOWN    - Scroll the screen down.
 
 Editing:
 x          - Delete the character after the cursor.
@@ -24,6 +22,8 @@ yw         - Copy the word under the cursor.
 p          - Paste the copied/cut content after the cursor.
 u          - Undo the last action.
 U          - Undo all changes in the current line.
+dw         - Delete next word
+db         - Delete previous word
 
 Search:
 /text<CR>  - Search for the text "text" from the cursor to the end of the file. Moves the cursor to the start of the found line.

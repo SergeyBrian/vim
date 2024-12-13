@@ -1,10 +1,10 @@
 from app.editor.models.text import TextModel
 from app.editor.view.base import BaseView
-from app.ui.render import Text, Window, BaseRenderer, Cursor
+from app.ui.render import Text, Window, IAdapterRenderer, Cursor
 
 
 class TextView(BaseView):
-    def __init__(self, renderer: BaseRenderer, model: TextModel):
+    def __init__(self, renderer: IAdapterRenderer, model: TextModel):
         super().__init__(renderer)
         self._model = model
 

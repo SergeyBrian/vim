@@ -1,7 +1,8 @@
 import curses
 
 from app.editor.utils.keys import Key
-from app.ui.render import BaseRenderer, Drawable, Text, Window, Cursor
+from app.ui.render import Drawable, Text, Window, Cursor
+from app.ui.adapter import Adapter
 
 
 class CursesWindow:
@@ -10,7 +11,7 @@ class CursesWindow:
         self.window = win
 
 
-class CursesRenderer(BaseRenderer):
+class CursesAdapter(Adapter):
     def __init__(self):
         super().__init__()
         self._screen = None
@@ -28,7 +29,7 @@ class CursesRenderer(BaseRenderer):
         return not self._screen
 
     def split_v(self):
-        r = CursesRenderer()
+        r = CursesAdapter()
         r._screen = self._screen.subwin(
             self.get_height() // 2,
             self.get_width(),
@@ -53,7 +54,7 @@ class CursesRenderer(BaseRenderer):
         return self.curses_ch_to_key(self._screen.getch())
 
     def render(self):
-        super().render()
+        # super().render()
         self._screen.clear()
         for window in self._windows.values():
             window.delete = True

@@ -4,11 +4,11 @@ from app.editor.models.command import CommandModel
 from app.editor.models.text import TextModel
 from app.editor.view.command import CommandView
 from app.editor.view.text import TextView
-from app.ui.render import BaseRenderer
+from app.ui.render import IAdapterRenderer
 
 
 class EditorController:
-    def __init__(self, renderer: BaseRenderer):
+    def __init__(self, renderer: IAdapterRenderer):
         text_model = TextModel()
         text_view = TextView(renderer, text_model)
         text_controller = TextController(text_model, text_view)

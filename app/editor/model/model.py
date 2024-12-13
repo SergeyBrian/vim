@@ -2,6 +2,7 @@ from mystring import MyString
 from enum import Enum
 from app.editor.utils.keys import Key
 from app.editor.view import debug as dbg_view
+from app.editor.model.observable import Observable
 
 
 class CursorPos:
@@ -19,7 +20,7 @@ class Mode(Enum):
     COMMAND = 3
 
 
-class Model:
+class Model(Observable):
     def __init__(self):
         self._lines: list[MyString] = [MyString()]
         self._cursor: CursorPos = CursorPos(0, 0)
@@ -292,7 +293,8 @@ class Model:
         self._cursor.col = 0
 
     def get_lines(self):
-        return [line.c_str() for line in self._lines]
+        return self._lines
+        # return [line.c_str() for line in self._lines]
 
     def move_cursor_h(self, d: int):
         cur_line_l = self._lines[self._cursor.row].length()
